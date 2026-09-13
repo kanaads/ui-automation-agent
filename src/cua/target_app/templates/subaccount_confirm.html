@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Confirm New Sub-Account</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><td>Member:</td><td>{{ member.name }} ({{ member.member_id }})</td></tr>
+<tr><td>Account Type:</td><td>{{ pending.account_type }}</td></tr>
+<tr><td>Initial Deposit:</td><td>${{ '%.2f'|format(pending.initial_deposit_cents / 100) }}</td></tr>
+<tr><td>Purpose:</td><td>{{ pending.purpose }}</td></tr>
+</table>
+<form method="post" action="/content/subaccount/confirm">
+<input type="hidden" name="token" value="{{ token }}">
+<input type="submit" name="btnConfirm" value="Confirm &amp; Open Account">
+</form>
+</body>
+</html>

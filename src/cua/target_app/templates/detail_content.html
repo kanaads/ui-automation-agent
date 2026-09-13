@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Member Detail</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><td>Member Name:</td><td>{{ member.name }}</td></tr>
+<tr><td>Savings Balance:</td><td>{{ balance_display }}</td></tr>
+<tr><td>Status:</td><td>{{ member.status }}</td></tr>
+</table>
+<p><a href="/content/subaccount/new?id={{ member.member_id }}">Open Sub-Account</a></p>
+</body>
+</html>

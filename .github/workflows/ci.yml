@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps chromium
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Unit tests
+        run: pytest tests/unit -m unit --cov=cua --cov-report=term-missing
+
+      - name: Integration tests (fixture LLM + real browser, no live model calls)
+        run: pytest tests/integration -m integration
+
+      # e2e_live is intentionally excluded from CI: it costs real API tokens and
+      # requires provider credentials. It is run manually to produce /evidence/.

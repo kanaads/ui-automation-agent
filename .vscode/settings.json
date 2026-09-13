@@ -1,0 +1,19 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests",
+        "-m",
+        "not e2e_live"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true
+    }
+}

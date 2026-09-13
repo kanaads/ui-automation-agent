@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+{% if notfound %}
+<p><font color="red"><b>No records match your search.</b></font></p>
+{% endif %}
+<h2>Member Search</h2>
+<form method="post" action="/content/search">
+<table border="1" cellpadding="4" cellspacing="0">
+<tr>
+<td>Member Number:</td>
+<td><input type="text" name="txtMemberId"></td>
+</tr>
+<tr>
+<td colspan="2" align="right"><input type="submit" name="btnSearch" value="{{ branding.search_button_label }}"></td>
+</tr>
+</table>
+</form>
+</body>
+</html>

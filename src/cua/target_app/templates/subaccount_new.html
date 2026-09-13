@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Open New Sub-Account</h2>
+{% if errors %}
+<p><font color="red"><b>Please correct the highlighted fields before continuing.</b></font></p>
+<ul>
+{% for e in errors %}<li><font color="red">{{ e }}</font></li>
+{% endfor %}
+</ul>
+{% endif %}
+<form method="post" action="/content/subaccount/new">
+<input type="hidden" name="id" value="{{ member.member_id }}">
+<table border="1" cellpadding="4" cellspacing="0">
+<tr>
+<td>Account Type:</td>
+<td>
+<select name="selAcctType">
+<option value="SAVINGS" {% if values.get('selAcctType') == 'SAVINGS' %}selected{% endif %}>Savings</option>
+<option value="CHECKING" {% if values.get('selAcctType') == 'CHECKING' %}selected{% endif %}>Checking</option>
+</select>
+</td>
+</tr>
+<tr>
+<td>Initial Deposit ($):</td>
+<td><input type="text" name="txtInitialDeposit" value="{{ values.get('txtInitialDeposit', '') }}"></td>
+</tr>
+<tr>
+<td>Purpose:</td>
+<td><input type="text" name="txtPurpose" value="{{ values.get('txtPurpose', '') }}"></td>
+</tr>
+<tr>
+<td colspan="2" align="right"><input type="submit" name="btnContinue" value="Continue"></td>
+</tr>
+</table>
+</form>
+</body>
+</html>
