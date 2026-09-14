@@ -1,17 +1,15 @@
 # Computer-Use Automation System
 
-> Status: in progress. This README is being filled in phase by phase; see
-> `REPORT.md` for the design write-up (also in progress).
-
 An LLM drives a real UI once to accomplish a goal, records what it did as a
 typed, reviewable **Capability Artifact**, and replays that artifact
 deterministically afterward with no model in the decision loop. When
 either path gets stuck, control hands off to a human on the *same* live
-session.
+session. See `REPORT.md` for the full design write-up (architecture and
+sequence diagrams included) and its Section 7 for known cuts/trade-offs.
 
 Built against a self-authored "hostile legacy" credit-union back office
 (framesets, table layout, no test IDs, injectable runtime faults) rather
-than a clean modern demo site — see `REPORT.md` Section 4 for why.
+than a clean modern demo site — see `REPORT.md` Section 1 for why.
 
 ## Setup
 

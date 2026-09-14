@@ -1,11 +1,212 @@
 # Design write-up
 
-> Status: in progress, filled in as each phase lands. Headings are fixed
-> per the assignment brief; content will be completed in the final phase.
-
 ## 1. Architecture
 
-*(pending overall narrative; the proxy target is built)*
+**Overview.** Two paths share almost nothing at runtime and everything at
+the schema level. *Discovery* (`cua.agent`) puts an LLM in a
+perceive-decide-act loop against a live `Surface`, one step at a time,
+until it either reaches a checkpoint or gives up — then a `Recorder` turns
+that one successful run into a typed, reviewable `CapabilityArtifact`
+(`cua.artifact`). *Replay* (`cua.replay` + `cua.policy`) executes that
+artifact deterministically, with zero model calls, against the same
+`Surface` abstraction — gated first by a safety layer that enforces the
+artifact's own domain allowlist and refuses any irreversible step unless
+a human explicitly authorized it for this invocation. Either path can hit
+something it genuinely can't resolve alone (the model gets stuck, a
+locator can't find its target, a risky step lacks authorization); both
+funnel into the same `cua.escalation` queue, and the handoff module is
+what lets a human reconnect to the *exact* live browser tab rather than
+starting over. Every real invocation of either path — success or failure
+— leaves behind structured evidence (`cua.evidence`): a full JSON record
+plus a screenshot, not just a status code that vanishes when the run
+ends.
+
+```mermaid
+flowchart TB
+    Operator(["Human Operator"])
+    Reviewer(["Human Reviewer"])
+
+    subgraph cli["CLI Layer"]
+        AgentCLI["cua.agent.cli<br/>discover"]
+        ReplayCLI["cua.replay.cli<br/>run"]
+    end
+
+    subgraph disc["Discovery Path (LLM in the loop, once)"]
+        Discover["cua.agent.discover<br/>perceive-decide-act loop"]
+        Decide["cua.agent.decide<br/>strict decision schema, never guesses"]
+        Prompt["cua.agent.prompt"]
+        LLMClient["cua.agent.llm<br/>Bedrock / Groq / NVIDIA NIM"]
+        Recorder["cua.agent.recorder<br/>build_artifact_from_discovery"]
+    end
+
+    subgraph art["Capability Artifact"]
+        ArtifactModel["cua.artifact.models<br/>CapabilityArtifact schema"]
+        ArtifactJSON[("artifact.json")]
+    end
+
+    subgraph replay["Replay Path (deterministic, no LLM)"]
+        Guard["cua.policy.guard<br/>guarded_replay"]
+        Enforce["cua.policy.enforce<br/>risk / domain checks"]
+        Redact["cua.policy.redact"]
+        Engine["cua.replay.engine<br/>replay + error taxonomy"]
+        Locator["cua.locator.resolve<br/>ROLE_NAME to LABEL_PROXIMITY to ANCHORED_REGION"]
+    end
+
+    subgraph surf["Surface Abstraction"]
+        SurfaceBase["cua.surface.base<br/>Surface ABC"]
+        WebSurface["cua.surface.web<br/>WebSurface (Playwright)"]
+        DesktopSurface["cua.surface.desktop<br/>stub"]
+        AriaParser["cua.surface.aria_parser"]
+    end
+
+    subgraph esc["Escalation & Handoff"]
+        Trigger["cua.escalation.trigger"]
+        Queue[("EscalationQueue<br/>OPEN to CLAIMED to RESOLVED/ABANDONED")]
+        Handoff["cua.escalation.handoff<br/>same-live-session CDP reconnect"]
+    end
+
+    subgraph ev["Evidence"]
+        Evidence["cua.evidence.capture<br/>JSON + screenshot"]
+    end
+
+    TargetApp[["Meridian Core<br/>hostile legacy target app"]]
+    Browser[["Playwright / Chromium"]]
+
+    Operator -->|"1"| AgentCLI
+    AgentCLI -->|"2"| Discover
+    Discover <-->|"3"| Decide
+    Discover -->|"4"| Prompt
+    Prompt -->|"5"| LLMClient
+    Discover -->|"6"| SurfaceBase
+    Discover -->|"7"| Recorder
+    Recorder -->|"8"| ArtifactModel
+    ArtifactModel -->|"9"| ArtifactJSON
+
+    Operator -->|"10"| ReplayCLI
+    ReplayCLI -->|"11"| Guard
+    Guard -->|"12"| Enforce
+    Guard -->|"13"| Redact
+    Guard -->|"14"| Engine
+    Engine -->|"15"| Locator
+    Engine -->|"16"| SurfaceBase
+    ArtifactJSON -->|"17"| Engine
+
+    SurfaceBase -->|"18"| WebSurface
+    WebSurface -->|"19"| AriaParser
+    SurfaceBase -->|"20"| DesktopSurface
+    WebSurface -->|"21"| Browser
+    Browser -->|"22"| TargetApp
+
+    Discover -.->|"23 STUCK or MAX_STEPS"| Trigger
+    Engine -.->|"24 POLICY_BLOCKED or not_found"| Trigger
+    Trigger -->|"25"| Queue
+    Queue -->|"26"| Handoff
+    Handoff -->|"27"| Browser
+    Handoff -->|"28"| Reviewer
+
+    AgentCLI -->|"29"| Evidence
+    ReplayCLI -->|"30"| Evidence
+```
+
+Numbers on the diagram are call order within each flow, not a global
+timeline: 1–9 is one discovery run start to finish, 10–17 is one
+(separate, later) replay run, 18–22 is the shared plumbing both bottom out
+in, and 23–30 (escalation, evidence) can fire from either. The dashed
+edges (23, 24) are the only place the two paths interact with each other
+at runtime — everywhere else they're independent consumers of the same
+`Surface` and the same `CapabilityArtifact` shape. Read top to bottom:
+discovery only ever produces an artifact; replay only ever consumes one;
+neither path ever calls the other directly.
+
+The sequence below makes the same design concrete as a timeline for one
+full lifecycle — discover, record, replay, and (if needed) escalate —
+including exactly which branch each `alt` block represents in the actual
+code (`cua.agent.discover`, `cua.policy.guarded_replay`):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operator
+    participant CLI as CLI (agent.cli / replay.cli)
+    participant Discover as cua.agent.discover
+    participant LLM as LLM Provider
+    participant Surface as WebSurface (Playwright)
+    participant App as Meridian Core (target app)
+    participant Recorder as cua.agent.recorder
+    participant Artifact as artifact.json
+    participant Replay as guarded_replay
+    participant Locator as cua.locator.resolve_target
+    participant Queue as EscalationQueue
+    actor Reviewer
+
+    rect rgb(240, 248, 255)
+        Note over Operator, Artifact: Phase 1: Discovery (LLM drives, once)
+        Operator ->> CLI: discover --goal ... --target ...
+        CLI ->> Discover: discover(goal, surface, llm)
+        loop each step, until done / stuck / max_steps
+            Discover ->> Surface: observe()
+            Surface ->> App: read ARIA snapshot
+            App -->> Surface: DOM / frames
+            Surface -->> Discover: Observation
+            Discover ->> LLM: complete(goal, observation, history)
+            LLM -->> Discover: decision JSON
+            Discover ->> Discover: parse_agent_decision() strict validation
+            alt invalid JSON, unknown ref, or "stuck"
+                Discover -->> CLI: DiscoveryResult(STUCK)
+            else "done"
+                Discover -->> CLI: DiscoveryResult(GOAL_REACHED)
+            else act (only branch that repeats)
+                Discover ->> Surface: act(action)
+                Surface ->> App: click / type / navigate
+                App -->> Surface: result
+                Surface -->> Discover: ActionResult
+            end
+        end
+        CLI ->> Recorder: build_artifact_from_discovery(result)
+        Recorder -->> CLI: CapabilityArtifact
+        CLI ->> Artifact: write artifact.json
+    end
+
+    rect rgb(255, 250, 240)
+        Note over Operator, Replay: Phase 2: Deterministic Replay (no LLM)
+        Operator ->> CLI: replay run --artifact ... --param ...
+        CLI ->> Replay: guarded_replay(artifact, inputs, surface)
+        Replay ->> Replay: check allowed_domains / RISKY_IRREVERSIBLE
+        alt off-allowlist domain or unauthorized risky step
+            Replay -->> CLI: ReplayResult(POLICY_BLOCKED)
+        else authorized
+            loop for each Step in artifact
+                Replay ->> Locator: resolve_target(step.target, observation)
+                alt not found or ambiguous
+                    Locator -->> Replay: error
+                    Replay -->> CLI: ReplayResult(needs_escalation)
+                else resolved
+                    Locator -->> Replay: ref
+                    Replay ->> Surface: act(step)
+                    Surface ->> App: click / type / extract
+                    App -->> Surface: result or fault
+                    Surface -->> Replay: ActionResult
+                end
+            end
+            Replay ->> Replay: assert_checkpoint
+            Replay -->> CLI: ReplayResult(SUCCESS / BUSINESS_OUTCOME / error)
+        end
+        CLI ->> CLI: save_replay_evidence()
+    end
+
+    rect rgb(255, 240, 240)
+        Note over Discover, Reviewer: Phase 3: Escalation (from either phase, when stuck)
+        CLI ->> Queue: ticket_from_discovery / ticket_from_replay(result)
+        Queue ->> Queue: status = OPEN
+        Reviewer ->> Queue: claim(ticket_id)
+        Queue ->> Queue: status = CLAIMED
+        Reviewer ->> Surface: reconnect_to_marked_page(marker) via CDP
+        Note right of Reviewer: joins the SAME live browser tab
+        Reviewer ->> App: resolve manually
+        Reviewer ->> Queue: resolve(ticket_id, notes)
+        Queue ->> Queue: status = RESOLVED
+    end
+```
 
 **Proxy target.** Rather than a public demo/sandbox site, the target is a
 self-built "hostile legacy" credit-union back office (`cua.target_app`,
@@ -229,9 +430,12 @@ before recording the evidence above.
 ## 2. Artifact schema
 
 The `CapabilityArtifact` schema (`src/cua/artifact/models.py`, ~85 unit
-tests, 100% line coverage) is implemented and is the first piece built,
-deliberately, since every later layer (replay, policy, escalation) is a
-consumer of its shape. Full rationale to follow; the shape itself:
+tests, 100% line coverage) was the first piece built, deliberately,
+since every later layer (replay, policy, escalation) is a consumer of
+its shape rather than a peer of it — a schema change ripples forward
+through the whole system, so it earned the most scrutiny before
+anything else was built on top of it. The rationale for each piece of
+that shape:
 
 - **Typed contract**: `input_schema` / `output_schema` are lists of typed,
   named, optionally-sensitive parameter specs — the agent-invocable
@@ -361,7 +565,66 @@ the unit tier.
 
 ## 4. Heterogeneity & multi-tenant
 
-*(pending)*
+The assignment's real-world premise (3.7) is one vendor product running
+under hundreds of institutions' own branding and small per-tenant
+quirks — a capability recorded once has to survive that, not be
+re-discovered per tenant. This project's target app models that
+directly rather than describing it abstractly: `create_app(tenant_variant=...)`
+(`cua.target_app.state`) serves the identical underlying flows under two
+tenant variants, `base` ("Meridian Core Credit Union", search button
+labeled "Search") and `tenant_b` ("Second Story Federal Credit Union",
+the *same* button relabeled "Find Member") — same structure, same field
+names, one real cosmetic drift, the same kind of change a real vendor
+rollout actually makes.
+
+**Schema-level scoping.** `TenantScope` (`cua.artifact.models`, Section 2)
+is how an artifact declares which of two things it is: `tenant_id=None`
+marks a tenant-agnostic base capability; setting `tenant_id` marks a
+tenant-specific override, which must then declare `base_capability_id`
+pointing back at the capability it specializes — enforced by
+`CapabilityArtifact`'s own validator, not left to convention, since a
+tenant override with no declared base is exactly the kind of drift that
+would otherwise go unnoticed until replay fails in production.
+`overrides: dict[str, Any]` is the (currently open-ended, Section 7)
+place a tenant-specific value would live once one is needed — a
+relabeled button is small enough to survive on the locator ladder alone
+(next paragraph), but a tenant that genuinely required a different field
+name or an extra step would record its own override artifact rather than
+force the base one to special-case it internally.
+
+**Why the locator ladder is the actual reuse mechanism, not the schema
+field.** A `base_capability_id` back-reference documents *that* two
+artifacts are related; it's the tiered `Target` (Section 1) that
+determines whether the *same recorded artifact* actually still works
+against a different tenant's rendering of the same screen, and this is
+proven live, not asserted: `test_tenant_b_relabeled_button_breaks_the_base_role_name_tier_live`
+takes the literal `Target` recorded against the base tenant's "Search"
+button and resolves it against a real, independently running `tenant_b`
+instance. With only the `ROLE_NAME` tier available, resolution genuinely
+returns `NOT_FOUND` — the rebrand really does break a name-based
+selector, not a contrived example. Adding one `ANCHORED_REGION` fallback
+("the first button in this frame," Section 1) — the same fallback tier
+a human reviewer would add on inspecting the artifact, not something
+the recorder invents on its own (Section 7) — resolves it correctly on
+`tenant_b`, at tier index 1, to a real, directly clickable ref (proven by
+actually clicking it, not just asserting a status). This is the concrete
+version of the claim the rest of this document makes structurally: a
+capability artifact's resilience to tenant drift is a property of how
+many independent ways its targets can be found, not of the schema
+recording that drift is *expected*.
+
+**What this does and doesn't claim.** Two tenants sharing one relabeled
+button is a deliberately small stand-in, not a full multi-tenant test
+matrix — proving the mechanism (schema-level scoping plus a locator
+ladder that survives a real rendering change) generalizes further than
+proving it against many tenants would, since the failure mode being
+guarded against (a selector strategy that only looks robust because it
+was never tested against real drift) is the same one regardless of how
+many tenants exist. What isn't built: nothing in this project resolves
+`overrides` automatically at replay time, and there's no tooling yet
+for "diff this tenant's artifact against its base" — both are natural
+extensions of the schema seam already in place, not blocked by it
+(Section 7).
 
 ## 5. Escalation & handoff
 
@@ -538,8 +801,12 @@ see Section 7.
 
 - Tier 4 locator strategy (`VISUAL_TEMPLATE`) is schema-validated but not
   executed by the replay engine (Section 1).
-- The desktop surface is an interface stub (Section 1); operator console
-  is still to come and will be a minimal/mocked UI (Section 5).
+- The desktop surface is an interface stub (Section 1). There's no
+  operator console at all -- every reviewer interaction proven in
+  Section 5 (`claim`, `reconnect_to_marked_page`, `resolve`) is a
+  direct function/script call, never a UI a human actually clicks
+  through. A minimal console around `EscalationQueue` would be a thin
+  layer on top of an interface that already exists, not a redesign.
 - The replay engine's `EXTRACT` action never coerces the raw extracted
   string against the declared `OutputSpec.type` -- `"$4,231.50"` comes
   back exactly as read, not as a parsed `4231.50`. Generic text-to-type
@@ -569,9 +836,12 @@ see Section 7.
   than redacting it field by field (Section 6): an `Observation`'s
   accessible-name text has no declared field boundary to redact
   against, the same reasoning `to_log_safe_dict()`'s own docstring gives
-  for leaving screenshot redaction to a lower layer (`cua.evidence`,
-  still to come). A caller that logs `last_observation` separately must
-  apply its own judgment.
+  for leaving screenshot redaction to a lower layer. `cua.evidence`
+  (Phase 9) is that lower layer now, and it saves every screenshot
+  verbatim -- it has no concept of "this pixel region is sensitive"
+  and doesn't attempt to invent one. A caller that logs
+  `last_observation` or a screenshot separately must still apply its
+  own judgment about what's safe to keep.
 - `infer_target` (Section 1) records a single-tier `Target` (`primary`
   only, no invented `fallbacks`) -- a fallback tier a human reviewer
   trusts is exactly the kind of judgment call left to them at review
@@ -636,6 +906,17 @@ see Section 7.
   resolved `HandoffTicket` could serve as evidence for in a real
   deployment -- `resolution_notes` is free text today, not a
   structured, verifiable authorization record.
+- `TenantScope.overrides` (Section 4) is a schema seam, not a runtime
+  mechanism -- nothing in `cua.replay`/`cua.policy` reads it or applies
+  it automatically. A tenant-specific artifact today survives drift
+  entirely via its own recorded `Target` fallbacks (Section 1/4); a
+  field-level override would need an explicit consumer to actually do
+  anything, and doesn't have one yet.
+- There's no tooling to diff a tenant-scoped artifact against the base
+  capability it declares in `base_capability_id` (Section 4) -- a human
+  reviewing a tenant override has to read both documents side by side
+  themselves. The schema enforces that the link exists; it doesn't
+  yet help anyone act on it.
 - The marker `reconnect_to_marked_page` searches for is written in the
   clear via `page.evaluate` and never cleared afterward; a page that's
   handed to a genuinely untrusted human operator (as opposed to one
