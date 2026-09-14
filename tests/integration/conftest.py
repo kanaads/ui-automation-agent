@@ -62,15 +62,28 @@ def live_tenant_b_app():
 
 
 @pytest.fixture(scope="session")
-def browser():
+def playwright_instance():
+    """The one Playwright driver connection this whole test session is
+    allowed to have: its sync API raises outright if a second
+    `sync_playwright()` is entered while one is already active in this
+    process (confirmed directly -- it's not a pytest-asyncio artifact).
+    Any fixture that needs its own `Browser` with non-default launch
+    args (e.g. `tests/integration/escalation/conftest.py`'s CDP-enabled
+    one) depends on this shared instance rather than starting another.
+    """
+    with sync_playwright() as p:
+        yield p
+
+
+@pytest.fixture(scope="session")
+def browser(playwright_instance):
     # Default is headless (CI / test.bat). Set HEADED=1 to watch the UI;
     # optional SLOW_MO (ms) slows each action so the run is visible.
     headed = os.environ.get("HEADED", "").strip().lower() in ("1", "true", "yes")
     slow_mo = int(os.environ.get("SLOW_MO", "0") or "0")
-    with sync_playwright() as p:
-        b = p.chromium.launch(headless=not headed, slow_mo=slow_mo)
-        yield b
-        b.close()
+    b = playwright_instance.chromium.launch(headless=not headed, slow_mo=slow_mo)
+    yield b
+    b.close()
 
 
 @pytest.fixture()

@@ -105,6 +105,72 @@ opened = guarded_replay(
 print(opened.status)  # ReplayStatus.SUCCESS -- explicitly authorized this time
 ```
 
+`cua.agent.discover` is the LLM-driven half: it drives a live `Surface`
+one perceive-decide-act step at a time (no artifact yet) until the model
+reports the goal reached, reports itself stuck, or `max_steps` runs out
+(REPORT.md Section 1). `cua.agent.recorder.build_artifact_from_discovery`
+then turns a successful transcript into a reviewable `CapabilityArtifact`
+— the same shape `cua.replay.replay` executes with no model involved:
+
+```python
+from cua.agent.discover import discover
+from cua.agent.recorder import build_artifact_from_discovery
+from cua.artifact.models import Checkpoint, LocatorStrategy, LocatorTier, ParamSpec, ParamType, ProvenanceRecordedBy, TenantScope
+from cua.surface.web import WebSurface
+from datetime import datetime, timezone
+
+surface = WebSurface(page)  # a real Playwright `page`, already on this app's origin
+llm = build_llm_client_from_env()  # or any LLMClient — Groq/NVIDIA NIM/Bedrock
+
+result = discover("Look up member 10001 and open their detail page.", surface, llm)
+print(result.status)  # DiscoveryStatus.GOAL_REACHED
+
+artifact = build_artifact_from_discovery(
+    result,
+    capability_id="look_up_member", version="1.0.0",
+    description="Look up a member by id and open their detail page.",
+    tenant_scope=TenantScope(vendor_app_id="meridian_core"),
+    checkpoint=Checkpoint(
+        description="The member detail page is showing.",
+        detection=LocatorTier(strategy=LocatorStrategy.ROLE_NAME, params={"role": "heading", "name": "Member Detail"}),
+    ),
+    input_schema=[ParamSpec(name="member_id", type=ParamType.STRING, required=True)],
+    parameterize={"10001": "member_id"},  # the literal discovery typed -> the parameter it becomes
+    provenance=ProvenanceRecordedBy(kind="llm_discovery", recorded_at=datetime.now(timezone.utc)),
+)
+# artifact is now replayable deterministically, for a different member id,
+# with no model in the loop at all: replay(artifact, {"member_id": "10002"}, WebSurface(other_page))
+```
+
+When either path ends in a status that needs a human
+(`result.needs_escalation`), `cua.escalation.trigger` turns it into a
+`HandoffTicket` on a real queue, and `cua.escalation.handoff` is what
+lets that human join the *exact same* live browser tab rather than a
+fresh one — the marker survives the human navigating around, so it
+works mid-flow, not just at a clean stopping point:
+
+```python
+from cua.escalation import (
+    InMemoryEscalationQueue, mark_page_for_handoff, reconnect_to_marked_page,
+    ticket_from_replay, SessionHandle,
+)
+
+# `page` is on whatever screen the run stopped at; `cdp_endpoint` is
+# wherever this browser process was launched with a remote-debugging
+# port exposed (e.g. `chromium.launch(args=["--remote-debugging-port=9333"])`).
+marker = mark_page_for_handoff(page)
+ticket = ticket_from_replay(result, artifact=artifact, raw_inputs=inputs, session=SessionHandle(cdp_endpoint, marker))
+
+queue = InMemoryEscalationQueue()
+if ticket is not None:
+    queue.open(ticket)
+
+# From a SEPARATE process/script -- a human operator's own tooling:
+joined_page = reconnect_to_marked_page(marker, cdp_endpoint=cdp_endpoint, connect_over_cdp=playwright.chromium.connect_over_cdp)
+# ...human does whatever's needed on `joined_page`, the real live tab...
+queue.resolve(ticket.ticket_id, notes="opened the account manually after review")
+```
+
 ## Repository layout
 
 ```
@@ -115,7 +181,7 @@ src/cua/
   replay/       deterministic executor + error taxonomy
   policy/       allowlist, risk classification, redaction
   agent/        LLM-driven discovery loop + recorder
-  escalation/   control-transfer state machine + operator handoff
+  escalation/   ticket/queue state machine + same-live-session CDP handoff
   target_app/   the local "hostile legacy" proxy target
   evidence/     structured run logging / evidence capture
 tests/
