@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "capability_id": "look_up_member_balance",
+  "version": "1.0.0",
+  "description": "Look up a member by id and open their detail page (where their current savings balance is shown).",
+  "tenant_scope": {
+    "vendor_app_id": "meridian_core",
+    "base_capability_id": null,
+    "tenant_id": null,
+    "overrides": {}
+  },
+  "input_schema": [
+    {
+      "name": "member_id",
+      "type": "string",
+      "required": true,
+      "description": "",
+      "pattern": null,
+      "enum_values": null,
+      "default": null,
+      "sensitive": false
+    }
+  ],
+  "output_schema": [],
+  "steps": [
+    {
+      "step_id": "step_1",
+      "action": "click",
+      "target": {
+        "primary": {
+          "strategy": "label_proximity",
+          "params": {
+            "near_text": "Member Number",
+            "control_type": "textbox"
+          },
+          "confidence_rationale": ""
+        },
+        "fallbacks": [],
+        "recorded_evidence": null,
+        "ambiguity_policy": "escalate_on_ambiguous"
+      },
+      "input_param": null,
+      "literal_value": null,
+      "output_field": null,
+      "risk": "safe",
+      "risk_rationale": "",
+      "timeout_ms": 5000,
+      "max_retries": 0
+    },
+    {
+      "step_id": "step_2",
+      "action": "type",
+      "target": {
+        "primary": {
+          "strategy": "label_proximity",
+          "params": {
+            "near_text": "Member Number",
+            "control_type": "textbox"
+          },
+          "confidence_rationale": ""
+        },
+        "fallbacks": [],
+        "recorded_evidence": null,
+        "ambiguity_policy": "escalate_on_ambiguous"
+      },
+      "input_param": "member_id",
+      "literal_value": null,
+      "output_field": null,
+      "risk": "safe",
+      "risk_rationale": "",
+      "timeout_ms": 5000,
+      "max_retries": 0
+    },
+    {
+      "step_id": "step_3",
+      "action": "click",
+      "target": {
+        "primary": {
+          "strategy": "role_name",
+          "params": {
+            "role": "button",
+            "name": "Search"
+          },
+          "confidence_rationale": ""
+        },
+        "fallbacks": [],
+        "recorded_evidence": null,
+        "ambiguity_policy": "escalate_on_ambiguous"
+      },
+      "input_param": null,
+      "literal_value": null,
+      "output_field": null,
+      "risk": "safe",
+      "risk_rationale": "",
+      "timeout_ms": 5000,
+      "max_retries": 0
+    }
+  ],
+  "checkpoint": {
+    "description": "",
+    "detection": {
+      "strategy": "role_name",
+      "params": {
+        "role": "heading",
+        "name": "Member Detail"
+      },
+      "confidence_rationale": ""
+    }
+  },
+  "known_outcomes": [],
+  "policy_scope": {
+    "allowed_domains": [
+      "localhost:8000"
+    ],
+    "allowed_action_types": [
+      "click",
+      "type"
+    ]
+  },
+  "provenance": {
+    "kind": "llm_discovery",
+    "model": null,
+    "discovery_run_id": null,
+    "recorded_at": "2026-09-14T00:02:50.654621Z"
+  }
+}

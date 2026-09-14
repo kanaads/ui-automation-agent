@@ -29,3 +29,12 @@ evidence/_scratch/
 
 # OS
 .DS_Store
+
+# A stray leftover file the sandbox's FUSE mount would not let us
+# delete outright (only rename) after an earlier __init__.py mistake;
+# harmless, empty, and excluded from every mirror/zip we produce.
+.stray_init_leftover_ignore
+
+
+.venv310/
+

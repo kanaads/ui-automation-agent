@@ -1,0 +1,13 @@
+{
+  "capability_id": "look_up_member_balance",
+  "version": "1.0.0",
+  "status": "unrecognized",
+  "outcome_code": null,
+  "failed_step_id": "step_3",
+  "reason": "all steps completed but the artifact's checkpoint was not confirmed",
+  "inputs": {
+    "member_id": "99999"
+  },
+  "outputs": {},
+  "captured_at": "2026-09-14T00:03:42.766412+00:00"
+}

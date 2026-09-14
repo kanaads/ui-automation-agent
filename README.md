@@ -54,11 +54,8 @@ manually (see the demo path below).
 
 ## Demo path
 
-*(to be filled in fully as each phase lands — discovery run, artifact
-replay, error-path replay, and escalation/handoff commands)*
-
 The proxy target ("Meridian Core", a deliberately hostile legacy
-credit-union back office) can already be run standalone:
+credit-union back office) can be run standalone:
 
 ```bash
 make run-app        # serves it at http://localhost:8000
@@ -170,6 +167,75 @@ joined_page = reconnect_to_marked_page(marker, cdp_endpoint=cdp_endpoint, connec
 # ...human does whatever's needed on `joined_page`, the real live tab...
 queue.resolve(ticket.ticket_id, notes="opened the account manually after review")
 ```
+
+### Evidence run (CLI)
+
+All of the above is also wired into two small CLIs, which is what the
+assignment's evidence deliverable actually runs end to end — a real
+LLM-driven discovery against a real running target app, then a
+deterministic replay of the artifact it recorded, with no model
+involved the second time. Both save their result as evidence
+(`cua.evidence`: a JSON transcript/result plus a final screenshot)
+under `--out`.
+
+```bash
+make run-app &   # serves http://localhost:8000 (create_app() as a --factory app)
+
+# 1. Real LLM discovery (needs .env; see Setup above) -> evidence + artifact.json.
+#    10001 is a real seed member (src/cua/target_app/data.py) -- a goal
+#    naming one that doesn't exist never reaches a checkpoint, so there'd
+#    be no artifact.json for step 2 to replay.
+make evidence-run
+# same thing, spelled out:
+python -m cua.agent.cli discover \
+  --goal "look up member 10001 and open their detail page" \
+  --target http://localhost:8000 \
+  --out evidence/discovery_lookup_balance \
+  --capability-id look_up_member_balance \
+  --description "Look up a member by id and open their detail page (where their current savings balance is shown)." \
+  --checkpoint-role heading --checkpoint-name "Member Detail" \
+  --parameterize 10001=member_id
+
+# 2. Deterministic replay of the artifact discovery just recorded -- no
+#    LLM -- against a DIFFERENT member id than was ever discovered.
+#    --start-path must match discovery's own --start-path (default
+#    /app): the artifact's steps were recorded relative to whatever
+#    screen that path lands on, and replay's own default (/nav) is for
+#    artifacts recorded starting there instead, e.g. this project's own
+#    tests (tests/unit/replay/conftest.py's build_member_balance_artifact).
+make replay
+# spelled out:
+python -m cua.replay.cli run \
+  --artifact evidence/discovery_lookup_balance/artifact.json \
+  --target http://localhost:8000 \
+  --start-path /app \
+  --out evidence/replay_lookup_balance \
+  --param member_id=10002
+
+# 3. The error-path replay the evidence deliverable also asks for -- a
+#    member id that doesn't exist. A freshly-discovered artifact has no
+#    known_outcomes yet (build_artifact_from_discovery never invents
+#    one -- REPORT.md Section 1/7: only a human reviewer who has seen
+#    what a "not found" screen actually looks like should declare it),
+#    so this correctly comes back `unrecognized` rather than a false
+#    "success" -- exactly cua.replay's error taxonomy doing its job on
+#    a case nobody has annotated yet (see the guarded_replay example
+#    above for what an artifact WITH a declared known_outcome reports
+#    for the equivalent case instead: a clean `business_outcome`).
+python -m cua.replay.cli run \
+  --artifact evidence/discovery_lookup_balance/artifact.json \
+  --target http://localhost:8000 \
+  --start-path /app \
+  --out evidence/replay_lookup_balance_not_found \
+  --param member_id=99999
+```
+
+`LLM_PROVIDER` and its matching credentials (Bedrock, Groq, or NVIDIA
+NIM — see `.env.example`) are only ever read by step 1; step 2 and 3
+never construct an `LLMClient` at all. `--output-field NAME` (repeatable)
+declares an output the discovered artifact's schema must have if the
+model's own transcript ends in an `extract` step naming it — omit it
+entirely, as above, for a goal a checkpoint alone can confirm.
 
 ## Repository layout
 

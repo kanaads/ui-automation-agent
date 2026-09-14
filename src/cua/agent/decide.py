@@ -52,6 +52,20 @@ class AgentDecision(BaseModel):
     output_field: str | None = None
     reason: str = ""
 
+    @model_validator(mode="before")
+    @classmethod
+    def _null_reason_means_omitted(cls, data: object) -> object:
+        """Some real models (observed live: Bedrock Claude Haiku 4.5)
+        send an explicit `"reason": null` rather than omitting the
+        field on a non-terminal action -- both mean "no reason given,"
+        so treat them identically instead of failing validation on a
+        `str`-typed field that happens to have received `None`. `stuck`
+        still requires a real, non-blank reason either way (enforced
+        below, same as the already-omitted/blank cases)."""
+        if isinstance(data, dict) and data.get("reason") is None and "reason" in data:
+            data = {**data, "reason": ""}
+        return data
+
     @model_validator(mode="after")
     def _validate_shape(self) -> AgentDecision:
         action = self.action

@@ -162,6 +162,29 @@ def test_stuck_with_a_blank_reason_raises_agent_decision_error():
         parse_agent_decision('{"thought": "t", "action": "stuck", "reason": "   "}')
 
 
+def test_explicit_null_reason_on_a_non_terminal_action_parses_the_same_as_omitted():
+    """A real model (observed live, Bedrock Claude Haiku 4.5) sends an
+    explicit `"reason": null` on a non-terminal action rather than
+    omitting the field entirely -- both are "no reason given," and only
+    `stuck` ever requires a real one, so this must not be treated any
+    differently than the field being absent."""
+    with_null = parse_agent_decision(
+        '{"thought": "t", "action": "click", "frame": "main", "ref": "b1", "reason": null}'
+    )
+    omitted = parse_agent_decision('{"thought": "t", "action": "click", "frame": "main", "ref": "b1"}')
+
+    assert with_null == omitted
+    assert with_null.reason == ""
+
+
+def test_explicit_null_reason_on_stuck_still_raises_agent_decision_error():
+    """`null` is "no reason given," same as omitting the field -- so it
+    must fail exactly like the already-covered omitted/blank cases
+    above, not be treated as some third, more-permissive shape."""
+    with pytest.raises(AgentDecisionError):
+        parse_agent_decision('{"thought": "t", "action": "stuck", "reason": null}')
+
+
 def test_balanced_json_object_scanning_handles_escaped_quotes_and_backslashes():
     """A JSON string value can legitimately contain an escaped quote
     (`\\"`) or an escaped backslash (`\\\\`) -- neither should be

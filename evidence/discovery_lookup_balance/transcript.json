@@ -1,0 +1,703 @@
+[
+  {
+    "decision": {
+      "thought": "I can see a Member Search interface with a textbox for entering a Member Number and a Search button. I need to enter member ID 10001 in the textbox and then click Search to look up this member.",
+      "action": "click",
+      "frame": "contentFrame",
+      "ref": "f2e9",
+      "value": null,
+      "output_field": null,
+      "reason": ""
+    },
+    "observation": {
+      "nodes": [
+        {
+          "ref": "e1",
+          "frame": "main",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "e3",
+          "frame": "main",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "e1"
+        },
+        {
+          "ref": "e4",
+          "frame": "main",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "e3"
+        },
+        {
+          "ref": "e5",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e6",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e5"
+        },
+        {
+          "ref": "e7",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "e6"
+        },
+        {
+          "ref": "e8",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e9",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e8"
+        },
+        {
+          "ref": "e10",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "e9"
+        },
+        {
+          "ref": "f1e3",
+          "frame": "navFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f1e1",
+          "frame": "navFrame",
+          "role": "generic",
+          "name": "Meridian Core Credit Union \u2014 Member Services",
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f1e3"
+        },
+        {
+          "ref": "f2e13",
+          "frame": "contentFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f2e1",
+          "frame": "contentFrame",
+          "role": "generic",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f2e13"
+        },
+        {
+          "ref": "f2e2",
+          "frame": "contentFrame",
+          "role": "heading",
+          "name": "Member Search",
+          "attrs": {
+            "level": "2"
+          },
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e4",
+          "frame": "contentFrame",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e5",
+          "frame": "contentFrame",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "f2e4"
+        },
+        {
+          "ref": "f2e6",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e7",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": "Member Number:",
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e6"
+        },
+        {
+          "ref": "f2e8",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e6"
+        },
+        {
+          "ref": "f2e9",
+          "frame": "contentFrame",
+          "role": "textbox",
+          "name": null,
+          "attrs": {},
+          "depth": 6,
+          "parent_ref": "f2e8"
+        },
+        {
+          "ref": "f2e10",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e11",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e10"
+        },
+        {
+          "ref": "f2e12",
+          "frame": "contentFrame",
+          "role": "button",
+          "name": "Search",
+          "attrs": {},
+          "depth": 6,
+          "parent_ref": "f2e11"
+        }
+      ],
+      "url": "http://localhost:8000/app",
+      "title": "Meridian Core Credit Union - Back Office"
+    },
+    "action_result": {
+      "ok": true,
+      "error": null,
+      "extracted_value": null
+    }
+  },
+  {
+    "decision": {
+      "thought": "The page shows a Member Search interface with a textbox for entering a Member Number and a Search button. I need to enter the member number 10001 in the textbox (ref='f2e9') and then click the Search button to look up this member.",
+      "action": "type",
+      "frame": "contentFrame",
+      "ref": "f2e9",
+      "value": "10001",
+      "output_field": null,
+      "reason": ""
+    },
+    "observation": {
+      "nodes": [
+        {
+          "ref": "e1",
+          "frame": "main",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "e3",
+          "frame": "main",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "e1"
+        },
+        {
+          "ref": "e4",
+          "frame": "main",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "e3"
+        },
+        {
+          "ref": "e5",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e6",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e5"
+        },
+        {
+          "ref": "e7",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "e6"
+        },
+        {
+          "ref": "e8",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e9",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e8"
+        },
+        {
+          "ref": "e10",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {
+            "active": true
+          },
+          "depth": 5,
+          "parent_ref": "e9"
+        },
+        {
+          "ref": "f1e3",
+          "frame": "navFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f1e1",
+          "frame": "navFrame",
+          "role": "generic",
+          "name": "Meridian Core Credit Union \u2014 Member Services",
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f1e3"
+        },
+        {
+          "ref": "f2e13",
+          "frame": "contentFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f2e1",
+          "frame": "contentFrame",
+          "role": "generic",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f2e13"
+        },
+        {
+          "ref": "f2e2",
+          "frame": "contentFrame",
+          "role": "heading",
+          "name": "Member Search",
+          "attrs": {
+            "level": "2"
+          },
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e4",
+          "frame": "contentFrame",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e5",
+          "frame": "contentFrame",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "f2e4"
+        },
+        {
+          "ref": "f2e6",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e7",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": "Member Number:",
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e6"
+        },
+        {
+          "ref": "f2e8",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e6"
+        },
+        {
+          "ref": "f2e9",
+          "frame": "contentFrame",
+          "role": "textbox",
+          "name": null,
+          "attrs": {
+            "active": true
+          },
+          "depth": 6,
+          "parent_ref": "f2e8"
+        },
+        {
+          "ref": "f2e10",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e11",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e10"
+        },
+        {
+          "ref": "f2e12",
+          "frame": "contentFrame",
+          "role": "button",
+          "name": "Search",
+          "attrs": {},
+          "depth": 6,
+          "parent_ref": "f2e11"
+        }
+      ],
+      "url": "http://localhost:8000/app",
+      "title": "Meridian Core Credit Union - Back Office"
+    },
+    "action_result": {
+      "ok": true,
+      "error": null,
+      "extracted_value": null
+    }
+  },
+  {
+    "decision": {
+      "thought": "I've typed '10001' into the search box. Now I need to click the 'Search' button to look up this member and retrieve their information.",
+      "action": "click",
+      "frame": "contentFrame",
+      "ref": "f2e12",
+      "value": null,
+      "output_field": null,
+      "reason": ""
+    },
+    "observation": {
+      "nodes": [
+        {
+          "ref": "e1",
+          "frame": "main",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "e3",
+          "frame": "main",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "e1"
+        },
+        {
+          "ref": "e4",
+          "frame": "main",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "e3"
+        },
+        {
+          "ref": "e5",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e6",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e5"
+        },
+        {
+          "ref": "e7",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "e6"
+        },
+        {
+          "ref": "e8",
+          "frame": "main",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "e4"
+        },
+        {
+          "ref": "e9",
+          "frame": "main",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "e8"
+        },
+        {
+          "ref": "e10",
+          "frame": "main",
+          "role": "iframe",
+          "name": null,
+          "attrs": {
+            "active": true
+          },
+          "depth": 5,
+          "parent_ref": "e9"
+        },
+        {
+          "ref": "f1e3",
+          "frame": "navFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f1e1",
+          "frame": "navFrame",
+          "role": "generic",
+          "name": "Meridian Core Credit Union \u2014 Member Services",
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f1e3"
+        },
+        {
+          "ref": "f2e13",
+          "frame": "contentFrame",
+          "role": "document",
+          "name": null,
+          "attrs": {},
+          "depth": 0,
+          "parent_ref": null
+        },
+        {
+          "ref": "f2e1",
+          "frame": "contentFrame",
+          "role": "generic",
+          "name": null,
+          "attrs": {},
+          "depth": 1,
+          "parent_ref": "f2e13"
+        },
+        {
+          "ref": "f2e2",
+          "frame": "contentFrame",
+          "role": "heading",
+          "name": "Member Search",
+          "attrs": {
+            "level": "2"
+          },
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e4",
+          "frame": "contentFrame",
+          "role": "table",
+          "name": null,
+          "attrs": {},
+          "depth": 2,
+          "parent_ref": "f2e1"
+        },
+        {
+          "ref": "f2e5",
+          "frame": "contentFrame",
+          "role": "rowgroup",
+          "name": null,
+          "attrs": {},
+          "depth": 3,
+          "parent_ref": "f2e4"
+        },
+        {
+          "ref": "f2e14",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e7",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": "Member Number:",
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e14"
+        },
+        {
+          "ref": "f2e15",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e14"
+        },
+        {
+          "ref": "f2e9",
+          "frame": "contentFrame",
+          "role": "textbox",
+          "name": "\"10001\"",
+          "attrs": {
+            "active": true
+          },
+          "depth": 6,
+          "parent_ref": "f2e15"
+        },
+        {
+          "ref": "f2e10",
+          "frame": "contentFrame",
+          "role": "row",
+          "name": null,
+          "attrs": {},
+          "depth": 4,
+          "parent_ref": "f2e5"
+        },
+        {
+          "ref": "f2e11",
+          "frame": "contentFrame",
+          "role": "cell",
+          "name": null,
+          "attrs": {},
+          "depth": 5,
+          "parent_ref": "f2e10"
+        },
+        {
+          "ref": "f2e12",
+          "frame": "contentFrame",
+          "role": "button",
+          "name": "Search",
+          "attrs": {},
+          "depth": 6,
+          "parent_ref": "f2e11"
+        }
+      ],
+      "url": "http://localhost:8000/app",
+      "title": "Meridian Core Credit Union - Back Office"
+    },
+    "action_result": {
+      "ok": true,
+      "error": null,
+      "extracted_value": null
+    }
+  }
+]

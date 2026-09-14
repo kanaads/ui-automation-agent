@@ -1,0 +1,258 @@
+{
+  "nodes": [
+    {
+      "ref": "e1",
+      "frame": "main",
+      "role": "document",
+      "name": null,
+      "attrs": {},
+      "depth": 0,
+      "parent_ref": null
+    },
+    {
+      "ref": "e3",
+      "frame": "main",
+      "role": "table",
+      "name": null,
+      "attrs": {},
+      "depth": 1,
+      "parent_ref": "e1"
+    },
+    {
+      "ref": "e4",
+      "frame": "main",
+      "role": "rowgroup",
+      "name": null,
+      "attrs": {},
+      "depth": 2,
+      "parent_ref": "e3"
+    },
+    {
+      "ref": "e5",
+      "frame": "main",
+      "role": "row",
+      "name": null,
+      "attrs": {},
+      "depth": 3,
+      "parent_ref": "e4"
+    },
+    {
+      "ref": "e6",
+      "frame": "main",
+      "role": "cell",
+      "name": null,
+      "attrs": {},
+      "depth": 4,
+      "parent_ref": "e5"
+    },
+    {
+      "ref": "e7",
+      "frame": "main",
+      "role": "iframe",
+      "name": null,
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "e6"
+    },
+    {
+      "ref": "e8",
+      "frame": "main",
+      "role": "row",
+      "name": null,
+      "attrs": {},
+      "depth": 3,
+      "parent_ref": "e4"
+    },
+    {
+      "ref": "e9",
+      "frame": "main",
+      "role": "cell",
+      "name": null,
+      "attrs": {},
+      "depth": 4,
+      "parent_ref": "e8"
+    },
+    {
+      "ref": "e10",
+      "frame": "main",
+      "role": "iframe",
+      "name": null,
+      "attrs": {
+        "active": true
+      },
+      "depth": 5,
+      "parent_ref": "e9"
+    },
+    {
+      "ref": "f1e3",
+      "frame": "navFrame",
+      "role": "document",
+      "name": null,
+      "attrs": {},
+      "depth": 0,
+      "parent_ref": null
+    },
+    {
+      "ref": "f1e1",
+      "frame": "navFrame",
+      "role": "generic",
+      "name": "Meridian Core Credit Union \u2014 Member Services",
+      "attrs": {},
+      "depth": 1,
+      "parent_ref": "f1e3"
+    },
+    {
+      "ref": "f2e16",
+      "frame": "contentFrame",
+      "role": "document",
+      "name": null,
+      "attrs": {},
+      "depth": 0,
+      "parent_ref": null
+    },
+    {
+      "ref": "f2e1",
+      "frame": "contentFrame",
+      "role": "generic",
+      "name": null,
+      "attrs": {
+        "active": true
+      },
+      "depth": 1,
+      "parent_ref": "f2e16"
+    },
+    {
+      "ref": "f2e2",
+      "frame": "contentFrame",
+      "role": "heading",
+      "name": "Member Detail",
+      "attrs": {
+        "level": "2"
+      },
+      "depth": 2,
+      "parent_ref": "f2e1"
+    },
+    {
+      "ref": "f2e3",
+      "frame": "contentFrame",
+      "role": "table",
+      "name": null,
+      "attrs": {},
+      "depth": 2,
+      "parent_ref": "f2e1"
+    },
+    {
+      "ref": "f2e4",
+      "frame": "contentFrame",
+      "role": "rowgroup",
+      "name": null,
+      "attrs": {},
+      "depth": 3,
+      "parent_ref": "f2e3"
+    },
+    {
+      "ref": "f2e5",
+      "frame": "contentFrame",
+      "role": "row",
+      "name": null,
+      "attrs": {},
+      "depth": 4,
+      "parent_ref": "f2e4"
+    },
+    {
+      "ref": "f2e6",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "Member Name:",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e5"
+    },
+    {
+      "ref": "f2e7",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "Alice Testperson",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e5"
+    },
+    {
+      "ref": "f2e8",
+      "frame": "contentFrame",
+      "role": "row",
+      "name": null,
+      "attrs": {},
+      "depth": 4,
+      "parent_ref": "f2e4"
+    },
+    {
+      "ref": "f2e9",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "Savings Balance:",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e8"
+    },
+    {
+      "ref": "f2e10",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "$4,231.50",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e8"
+    },
+    {
+      "ref": "f2e11",
+      "frame": "contentFrame",
+      "role": "row",
+      "name": null,
+      "attrs": {},
+      "depth": 4,
+      "parent_ref": "f2e4"
+    },
+    {
+      "ref": "f2e12",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "Status:",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e11"
+    },
+    {
+      "ref": "f2e13",
+      "frame": "contentFrame",
+      "role": "cell",
+      "name": "ACTIVE",
+      "attrs": {},
+      "depth": 5,
+      "parent_ref": "f2e11"
+    },
+    {
+      "ref": "f2e14",
+      "frame": "contentFrame",
+      "role": "paragraph",
+      "name": null,
+      "attrs": {},
+      "depth": 2,
+      "parent_ref": "f2e1"
+    },
+    {
+      "ref": "f2e15",
+      "frame": "contentFrame",
+      "role": "link",
+      "name": "Open Sub-Account",
+      "attrs": {
+        "cursor": "pointer",
+        "href": "/content/subaccount/new?id=10001"
+      },
+      "depth": 3,
+      "parent_ref": "f2e14"
+    }
+  ],
+  "url": "http://localhost:8000/app",
+  "title": "Meridian Core Credit Union - Back Office"
+}

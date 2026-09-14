@@ -160,6 +160,72 @@ tests, 100% coverage). Four pieces, each earning its own boundary:
   independent page, with a different member id than discovery happened
   to use -- to a real `SUCCESS`.
 
+**CLI & evidence capture** (`cua.agent.cli`, `cua.replay.cli`,
+`cua.evidence`, ~36 unit + 4 live integration tests, 100% coverage).
+`python -m cua.agent.cli discover` and `python -m cua.replay.cli run`
+are what `make evidence-run`/`make replay` actually invoke -- the
+thin, real-world entry points around everything the earlier phases
+built. Both follow the same three-layer split every other real
+boundary in this project already takes: `parse_args` (pure argparse),
+`execute` (the real orchestration -- discover/replay, then
+`cua.evidence.save_discovery_evidence`/`save_replay_evidence` --
+taking an already-built `Surface`/`LLMClient` as plain parameters, so
+unit tests exercise it against the exact same fakes `cua.agent.discover`
+and `cua.replay.engine`'s own tests use), and `main` (the only place
+that builds REAL collaborators: a Playwright browser, and for
+discovery, `build_llm_client_from_env()`). `main` offers exactly two
+narrow seams for testing -- an `llm_factory` (agent CLI only, since
+replay has no LLM at all) and a `playwright_driver` -- both `None` in
+every real invocation; the second exists only because Playwright's
+sync API allows a single active driver connection per process (Section
+5's own note), so a test session that already holds one open for
+other fixtures must hand it to `main` rather than let it open a
+conflicting second one. `cua.evidence.save_discovery_evidence`/
+`save_replay_evidence` write structured JSON (the full transcript for
+discovery; a `cua.policy.redact_result`-projected result for replay,
+since a real artifact's `sensitive` declarations must be honored
+wherever its data lands) plus a screenshot -- reviewable evidence, not
+just a terminal status code that vanishes when the run ends. Proven
+live end-to-end (`tests/integration/agent/test_agent_cli_live.py`,
+`tests/integration/replay/test_replay_cli_live.py`): `main` itself,
+real argv and all, against the real target app.
+
+**The actual live run** (`evidence/discovery_lookup_balance`,
+`evidence/replay_lookup_balance`, `evidence/replay_lookup_balance_not_found`
+-- AWS Bedrock, `us.anthropic.claude-haiku-4-5-20251001-v1:0`) surfaced
+two real gaps no amount of fixture-driven testing had caught, exactly
+the point of doing one:
+
+- The model sent an explicit `"reason": null` on a non-terminal
+  decision rather than omitting the field -- a `str`-typed field with a
+  `""` default rejects `None` outright, so `parse_agent_decision`
+  raised on an otherwise well-formed decision. Fixed with a `mode="before"`
+  validator on `AgentDecision` that treats an explicit null the same as
+  the field being absent (`cua.agent.decide`, red-green: see
+  `test_explicit_null_reason_on_a_non_terminal_action_parses_the_same_as_omitted`).
+  `stuck` still requires a real, non-blank reason either way.
+- The discovery goal's own wording mattered more than expected: asking
+  the model to "read" a balance sometimes made it call `extract` with
+  an `output_field` name it invented on the spot -- which
+  `build_artifact_from_discovery` then rejects unless that exact name
+  is declared ahead of time, and there was no way to declare it from
+  the CLI at all. Added `--output-field NAME` (repeatable) to
+  `cua.agent.cli discover`, mirroring `--parameterize`'s shape. The
+  demo goal itself was reworded to something a checkpoint alone
+  confirms (no extract needed) once it became clear that was the more
+  representative one-artifact example; the flag stays for a goal that
+  does end in `extract`.
+
+Also surfaced: `Makefile`'s `run-app`/`evidence-run`/`replay` targets
+had never actually been run before this phase. `run-app` named a
+module-level `app` that doesn't exist (`create_app()` is a factory --
+fixed with `--factory`); `evidence-run`/`replay` were missing several
+now-required flags and used member id `12345`, which isn't a real seed
+record (`src/cua/target_app/data.py` only has `10001`-`10004`) --
+either bug would have made a from-scratch `make evidence-run` fail
+immediately. All fixed and re-verified against the real target app
+before recording the evidence above.
+
 ## 2. Artifact schema
 
 The `CapabilityArtifact` schema (`src/cua/artifact/models.py`, ~85 unit
@@ -531,6 +597,21 @@ see Section 7.
 - `max_steps` (default 15) is a blunt, fixed safety limit, not an
   adaptive one -- it doesn't shrink for a simple goal or grow for a
   genuinely complex one.
+- `cua.agent.cli discover`'s checkpoint is only ever a single
+  `ROLE_NAME` locator (`--checkpoint-role`/`--checkpoint-name`) -- a
+  human recording a real capability through `cua.agent.recorder`
+  directly can choose any locator strategy for the checkpoint; the CLI
+  is a thinner, one-shot convenience on top of the same recorder, not
+  a replacement for reviewing and hand-editing the resulting artifact.
+- `cua.agent.cli discover`'s `--parameterize` is the same literal
+  exact-string match `build_artifact_from_discovery` already has
+  (Section 7, Phase 7) -- the CLI adds no smarter inference on top of
+  it.
+- Evidence screenshot capture is a single final screenshot per run,
+  not one per step -- proving the end state, not narrating the whole
+  visual journey. A fuller evidence bundle capturing one per step
+  would be a straightforward extension of the same `save_discovery_
+  evidence`/`save_replay_evidence` functions, not a redesign.
 - `InMemoryEscalationQueue` (Section 5) is exactly that: in-process and
   non-persistent. A restart loses every open ticket. It's the right
   scope for demonstrating the mechanism; a real deployment swaps it
