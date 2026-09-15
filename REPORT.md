@@ -392,7 +392,9 @@ live end-to-end (`tests/integration/agent/test_agent_cli_live.py`,
 real argv and all, against the real target app.
 
 **The actual live run** (`evidence/discovery_lookup_balance`,
-`evidence/replay_lookup_balance`, `evidence/replay_lookup_balance_not_found`
+`evidence/replay_lookup_balance`, `evidence/replay_lookup_balance_not_found`,
+and `evidence/replay_lookup_balance_business_outcome` for the declared
+`MEMBER_NOT_FOUND` business-outcome path after human annotation)
 -- AWS Bedrock, `us.anthropic.claude-haiku-4-5-20251001-v1:0`) surfaced
 two real gaps no amount of fixture-driven testing had caught, exactly
 the point of doing one:
@@ -454,6 +456,14 @@ that shape:
 - **Tenant scope seam**: `tenant_scope` distinguishes a base capability
   from a tenant-specific override (with a required back-reference), for
   the multi-tenant reuse story in Section 4.
+- **Content-hash seal**: `content_hash` is a SHA-256 digest of the
+  canonical JSON serialization of every field *except* itself. Fresh
+  construction seals automatically; loading a file whose digest no
+  longer matches the payload fails validation — so "which exact version
+  of this capability ran?" is answered by the artifact, not by hoping a
+  filename or `version` string stayed honest. Pretty-printing on disk
+  does not change the digest (canonical form is sorted keys,
+  separators-fixed).
 - **Redaction by construction**: a sensitive `ParamSpec`/`OutputSpec` can
   never carry a baked-in example value; a `Step.literal_value` that looks
   SSN/PAN-shaped is rejected outright; `to_log_safe_dict()` masks captured

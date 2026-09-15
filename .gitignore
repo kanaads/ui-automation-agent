@@ -38,3 +38,6 @@ evidence/_scratch/
 
 .venv310/
 
+# Local handoff / session notes — never commit
+HANDOFF_NOTES.md
+

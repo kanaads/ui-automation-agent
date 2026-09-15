@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "capability_id": "look_up_member_balance",
   "version": "1.0.0",
-  "description": "Look up a member by id and open their detail page (where their current savings balance is shown).",
+  "description": "Look up a member by id and open their detail page (where their current savings balance is shown). Human-annotated after discovery with a declared MEMBER_NOT_FOUND known_outcome so replay can report a business_outcome instead of unrecognized when the member does not exist.",
   "tenant_scope": {
     "vendor_app_id": "meridian_core",
     "base_capability_id": null,
@@ -107,7 +107,21 @@
       "confidence_rationale": ""
     }
   },
-  "known_outcomes": [],
+  "known_outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "No member matches the given member number.",
+      "category": "business_outcome",
+      "detection": {
+        "strategy": "role_name",
+        "params": {
+          "role": "generic",
+          "name": "No records match your search."
+        },
+        "confidence_rationale": "Exact copy of the target app not-found banner text."
+      }
+    }
+  ],
   "policy_scope": {
     "allowed_domains": [
       "localhost:8000"
@@ -118,10 +132,10 @@
     ]
   },
   "provenance": {
-    "kind": "llm_discovery",
+    "kind": "human_authored",
     "model": null,
     "discovery_run_id": null,
-    "recorded_at": "2026-09-14T00:02:50.654621Z"
+    "recorded_at": "2026-09-15T06:00:09.603082Z"
   },
-  "content_hash": "4f318cfb1cf73858db8619522dc1fc38a2653e605083a52e0f71efd018fa9623"
+  "content_hash": "65672907390191f7b2d40abb7ce9317e710601d819970ae0f1bc0dcc63abc47f"
 }

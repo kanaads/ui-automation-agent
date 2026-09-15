@@ -45,6 +45,7 @@ def test_json_schema_export_includes_top_level_contract_fields():
         "policy_scope",
         "provenance",
         "tenant_scope",
+        "content_hash",
     ]:
         assert field in schema["properties"], f"missing {field} in exported JSON Schema"
 

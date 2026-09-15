@@ -217,19 +217,30 @@ python -m cua.replay.cli run \
 #    what a "not found" screen actually looks like should declare it),
 #    so this correctly comes back `unrecognized` rather than a false
 #    "success" -- exactly cua.replay's error taxonomy doing its job on
-#    a case nobody has annotated yet (see the guarded_replay example
-#    above for what an artifact WITH a declared known_outcome reports
-#    for the equivalent case instead: a clean `business_outcome`).
+#    a case nobody has annotated yet.
 python -m cua.replay.cli run \
   --artifact evidence/discovery_lookup_balance/artifact.json \
   --target http://localhost:8000 \
   --start-path /app \
   --out evidence/replay_lookup_balance_not_found \
   --param member_id=99999
+
+# 4. Same member id against a human-annotated artifact that declares
+#    MEMBER_NOT_FOUND as a known_outcome -- reports business_outcome
+#    instead of unrecognized (checked in under
+#    evidence/replay_lookup_balance_business_outcome/).
+make replay-business-outcome
+# spelled out:
+python -m cua.replay.cli run \
+  --artifact evidence/replay_lookup_balance_business_outcome/artifact.json \
+  --target http://localhost:8000 \
+  --start-path /app \
+  --out evidence/replay_lookup_balance_business_outcome \
+  --param member_id=99999
 ```
 
 `LLM_PROVIDER` and its matching credentials (Bedrock, Groq, or NVIDIA
-NIM — see `.env.example`) are only ever read by step 1; step 2 and 3
+NIM — see `.env.example`) are only ever read by step 1; steps 2–4
 never construct an `LLMClient` at all. `--output-field NAME` (repeatable)
 declares an output the discovered artifact's schema must have if the
 model's own transcript ends in an `extract` step naming it — omit it

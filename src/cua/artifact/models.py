@@ -23,16 +23,23 @@ Design summary (see /REPORT.md for the full rationale):
   │                                     up front, not discovered ad hoc
   ├── policy_scope                   -- the artifact's own allowlist
   │                                     footprint (must cover what it does)
-  └── tenant_scope                   -- base capability vs. per-tenant
-                                         override, for cross-tenant reuse
+  ├── tenant_scope                   -- base capability vs. per-tenant
+  │                                      override, for cross-tenant reuse
+  └── content_hash                   -- SHA-256 seal over the canonical
+                                         payload (everything except this
+                                         field); verified on load
 
 Every cross-reference (input_param -> input_schema, output_field ->
 output_schema, action types -> policy_scope) is validated at construction
 time. An artifact that fails to validate should never be saved, let alone
-replayed.
+replayed. The content_hash seal answers "which exact version of this
+capability ran?" -- a tampered or partially-edited JSON on disk fails
+validation rather than silently replaying as if nothing changed.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from datetime import datetime
 from enum import Enum
@@ -412,6 +419,14 @@ class CapabilityArtifact(BaseModel):
     known_outcomes: list[KnownOutcome] = Field(default_factory=list)
     policy_scope: PolicyScope
     provenance: ProvenanceRecordedBy
+    content_hash: str | None = Field(
+        default=None,
+        description=(
+            "SHA-256 hex digest of the canonical JSON serialization of every "
+            "field except content_hash itself. Omitted/None seals on "
+            "construction; a present value is verified and rejected on mismatch."
+        ),
+    )
 
     @field_validator("capability_id")
     @classmethod
@@ -424,6 +439,25 @@ class CapabilityArtifact(BaseModel):
         if not _SEMVER_RE.match(v):
             raise ValueError(f"'{v}' is not a semver MAJOR.MINOR.PATCH string")
         return v
+
+    @field_validator("content_hash")
+    @classmethod
+    def _content_hash_shape(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not re.fullmatch(r"[0-9a-f]{64}", v):
+            raise ValueError("content_hash must be a 64-char lowercase hex SHA-256 digest")
+        return v
+
+    def compute_content_hash(self) -> str:
+        """SHA-256 over canonical JSON of the artifact payload excluding
+        `content_hash`. Stable across dump/load as long as the semantic
+        fields are unchanged -- key order and separators are fixed here,
+        independent of how a caller pretty-printed the file on disk.
+        """
+        payload = self.model_dump(mode="json", exclude={"content_hash"})
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     @model_validator(mode="after")
     def _validate_contract(self) -> CapabilityArtifact:
@@ -473,6 +507,18 @@ class CapabilityArtifact(BaseModel):
         if self.tenant_scope.tenant_id and not self.tenant_scope.base_capability_id:
             raise ValueError(
                 "a tenant-scoped artifact (tenant_id set) must declare base_capability_id"
+            )
+
+        expected = self.compute_content_hash()
+        if self.content_hash is None:
+            # Seal unsealed artifacts (fresh construction, or JSON written
+            # before this field existed). Callers that edit a sealed artifact
+            # in memory and re-validate must clear content_hash to reseal.
+            self.content_hash = expected
+        elif self.content_hash != expected:
+            raise ValueError(
+                "content_hash does not match artifact payload "
+                f"(expected {expected}, got {self.content_hash})"
             )
 
         return self

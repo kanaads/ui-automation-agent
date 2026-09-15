@@ -1,4 +1,4 @@
-.PHONY: install browsers test unit integration lint typecheck run-app evidence-run replay
+.PHONY: install browsers test unit integration lint typecheck run-app evidence-run replay replay-business-outcome
 
 install:
 	pip install -e ".[dev]"
@@ -53,3 +53,13 @@ replay:
 		--start-path /app \
 		--param member_id=10002 \
 		--out evidence/replay_lookup_balance
+
+# Same not-found member id against a human-annotated artifact that
+# declares MEMBER_NOT_FOUND -- demonstrates ReplayStatus.BUSINESS_OUTCOME.
+replay-business-outcome:
+	python -m cua.replay.cli run \
+		--artifact evidence/replay_lookup_balance_business_outcome/artifact.json \
+		--target http://localhost:8000 \
+		--start-path /app \
+		--param member_id=99999 \
+		--out evidence/replay_lookup_balance_business_outcome

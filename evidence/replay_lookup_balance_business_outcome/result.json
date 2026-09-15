@@ -1,0 +1,13 @@
+{
+  "capability_id": "look_up_member_balance",
+  "version": "1.0.0",
+  "status": "business_outcome",
+  "outcome_code": "MEMBER_NOT_FOUND",
+  "failed_step_id": "step_3",
+  "reason": "No member matches the given member number.",
+  "inputs": {
+    "member_id": "99999"
+  },
+  "outputs": {},
+  "captured_at": "2026-09-15T06:00:57.819777+00:00"
+}
